@@ -1,0 +1,5 @@
+let &backupdir = work_dir . '/backupdir'
+let &undodir = work_dir . '/undodir'
+set expandtab
+set tabstop=4
+set shiftwidth=4

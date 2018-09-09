@@ -9,8 +9,8 @@ Files for environment on jhudgins machines.
 mkdir -p c:/git
 mkdir -p c:/work/backupdir
 mkdir -p c:/work/undodir
-git clone ssh://jhudgins@github.com/jahudgins/config c:/git/config
+git clone https://jhudgins@github.com/jahudgins/config c:/git/config
+cp c:/git/config/bashrc.common ~/.bashrc
 cp c:/git/config/vimrc.sample.windows c:/vim/_vimrc
-cp c:/git/config/bashrc.sample.windows ~/.bashrc
 ```
 

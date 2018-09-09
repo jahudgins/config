@@ -34,4 +34,4 @@ function MyDiff()
   endif
 endfunction
 
-source vimrc.common
+source <sfile>:p:h/vimrc.common

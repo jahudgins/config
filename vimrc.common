@@ -3,3 +3,9 @@ let &undodir = work_dir . '/undodir'
 set expandtab
 set tabstop=4
 set shiftwidth=4
+let &runtimepath = git_dir . '/config/vimruntime,' . &runtimepath
+execute pathogen#infect(git_dir . '/vim_bundles/{}')
+
+if has('win32')
+    set shell=C:\Windows\system32\cmd.exe
+endif

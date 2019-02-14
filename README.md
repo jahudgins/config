@@ -8,6 +8,7 @@ Files for environment on jhudgins machines.
 ```
 mkdir -p c:/git
 mkdir -p c:/work/backupdir
+mkdir -p c:/work/temp
 mkdir -p c:/work/undodir
 git clone https://jhudgins@github.com/jahudgins/config c:/git/config
 cp c:/git/config/bashrc.common ~/.bashrc

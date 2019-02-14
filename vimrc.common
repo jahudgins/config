@@ -1,11 +1,694 @@
+set backup              " keep a backup file
+set writebackup         " keep a backup file
+
 let &backupdir = work_dir . '/backupdir'
 let &undodir = work_dir . '/undodir'
+let $temp = work_dir .'/temp'
+let $config_dir = git_dir .'/config'
 set expandtab
 set tabstop=4
 set shiftwidth=4
-let &runtimepath = git_dir . '/config/vimruntime,' . &runtimepath
-execute pathogen#infect(git_dir . '/vim_bundles/{}')
+let &runtimepath = $config_dir . '/config/vimruntime,' . &runtimepath
 
 if has('win32')
     set shell=C:\Windows\system32\cmd.exe
 endif
+
+silent! unmap 
+set nojoinspaces
+set nocompatible
+
+" BEGIN from vimrc_example.vim
+" I don't like the way vimrc_example works (it seems to force line breaks on text files),
+" so hard code the useful ones
+"source $VIMRUNTIME/vimrc_example.vim
+" allow backspacing over everything in insert mode
+set backspace=indent,eol,start
+set history=50		" keep 50 lines of command line history
+set ruler		" show the cursor position all the time
+set showcmd		" display incomplete commands
+set incsearch		" do incremental searching
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+  syntax on
+  set hlsearch
+endif
+" Only do this part when compiled with support for autocommands.
+if has("autocmd")
+  " Enable file type detection.
+  filetype plugin indent on
+  augroup vimrcEx
+  au!
+  " When editing a file, always jump to the last known cursor position.
+  " Don't do it when the position is invalid or when inside an event handler
+  " (happens when dropping a file on gvim).
+  " Also don't do it when the mark is in the first line, that is the default
+  " position when opening a file.
+  autocmd BufReadPost *
+    \ if line("'\"") > 1 && line("'\"") <= line("$") |
+    \   exe "normal! g`\"" |
+    \ endif
+
+  augroup END
+
+else
+
+  set autoindent		" always set autoindenting on
+
+endif " has("autocmd")
+
+" Convenient command to see the difference between the current buffer and the
+" file it was loaded from, thus the changes you made.
+" Only define it when not defined already.
+if !exists(":DiffOrig")
+  command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_ | diffthis
+		  \ | wincmd p | diffthis
+endif
+
+" END from vimrc_example.vim
+"
+
+behave xterm
+set selectmode=mouse
+set guioptions=agimrt
+set guifont=lucida_console:h9
+set lines=110
+set co=120
+set textwidth=0
+setlocal textwidth=0
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set nocin
+set noruler
+set wrapscan
+
+let mapleader=","
+
+let python_highlight_space_errors = 1
+let $VIM="c:/Vim"
+let relative=0
+
+com! -nargs=* T tselect
+" why do I have  ?  It doesn't seem to work right otherwise
+map T :tjump <cr>
+"map t :ptj <cr>
+map t :call TagJumpOtherWindow()<cr>
+function! TagJumpOtherWindow()
+  let cw = expand("<cword>")
+  winc p
+  exec "tjump " . cw
+  let @/ = cw
+  normal z.
+  winc p
+endfunction
+
+" lazyredraw:  do not update screen while executing macros
+set lazyredraw
+
+" laststatus:  Always show status line, even for only one buffer.
+set laststatus=2
+
+function! DA()
+	let base=$temp."change_orig.c "
+	let theirs=$temp."change_theirs.c "
+	let yours=$temp."change_yours.c "
+	let merged=$temp."change_merged.c "
+  exec ":b1"
+  exec ":w! " . base
+  exec ":b2"
+  exec ":w! " . theirs
+  exec ":b3"
+  exec ":w! " . yours
+  exec ":b4"
+  exec ":w! " . merged
+	silent exec "! start c:\\vim\\". $vimversion . "\\gvim " . base . theirs
+	silent exec "! start c:\\vim\\". $vimversion . "\\gvim " . base . yours
+	silent exec "! start c:\\vim\\". $vimversion . "\\gvim " . base . merged
+endfunction
+
+function! DC()
+	let orig=$temp."change_orig.c "
+	let theirs=$temp."change_theirs.c "
+	let yours=$temp."change_yours.c "
+
+	sp
+
+	normal y/^==== THEIRS
+	exec ":e ". orig
+	normal Gopkdgg
+	exec ":w"
+	exec ":e#"
+
+	normal /^==== THEIRSy/^==== YOURS
+	exec ":e ". theirs
+	normal Gopkdgg
+	exec ":w"
+	exec ":e#"
+
+	normal /^==== YOURSy/^<<<<
+	exec ":e ". yours
+	normal Gopkdgg
+	exec ":w"
+	exec ":e#"
+	silent exec "! start c:\\vim\\vim80\\gvim " . orig . theirs
+	silent exec "! start c:\\vim\\vim80\\gvim " . orig . yours
+
+	clo
+endfunction
+
+function! DM()
+  sp
+  b 2
+  diffthis
+  vert sp
+  b 3
+  diffthis
+  winc j
+  b 4
+  winc k
+  set co=500
+  winc =
+	winc j
+	normal GG/>>>>
+endfunction
+
+nmap ,da :call DA()<cr>
+nmap ,dc :call DC()<cr>
+nmap ,dm :call DM()<cr>
+nmap ,dd :call DD()<cr>
+nmap ,do :call DiffOrig()<cr>
+nmap ,df :call DF()<cr>
+
+function! DF()
+	vert sp
+	bn
+	diffthis
+	set scrollbind
+	winc w
+	diffthis
+	set scrollbind
+	set co=500
+	winc =
+	winc w
+endfunction
+
+
+function! DD()
+	vert sp
+	bn
+	diffthis
+	set nofoldenable
+	set scrollbind
+	winc w
+	diffthis
+	set nofoldenable
+	set scrollbind
+	set co=500
+	winc =
+	winc w
+endfunction
+
+function! Dset()
+  set nofoldenable
+  winc w
+  set scrollbind
+  set nofoldenable
+  winc w
+  set scrollbind
+  set co=500
+  winc =
+  0
+endfunction
+com! -nargs=0 Dset call Dset()
+
+com! -nargs=0 DD call DD()
+
+nmap [p :diffput<CR>
+nmap ]p :diffget<CR>
+
+function! UndiffBuffer()
+  set nofoldenable
+  set foldcolumn=0
+  set nodiff
+  set wrap
+  set noscrollbind
+endfunction
+
+function! Undiff()
+  set co=120
+  call UndiffBuffer()
+  winc w
+  set co=120
+  call UndiffBuffer()
+  winc w
+endfunction
+com! -nargs=0 Undiff call Undiff()
+set diffopt=iwhite
+
+map  :e#<cr>
+
+function! GetMsdevFile(line)
+  let mx = '^[0-9]*>\([a-zA-Z_/\.0-9:\- ]*\)'
+  let file = matchstr( a:line, mx )
+  let file = substitute( file, mx, '\1', '' )
+  let file = substitute( file, '\\', '/', '' )
+  return file
+endfunction
+
+function! GetMsdevLineNumber(line)
+  let mx = '^[0-9]*>\([a-zA-Z_/\.0-9:\- ]*\)(\(\d\+\)[),]'
+  let line = matchstr( a:line, mx )
+  let linenumber = substitute( line, mx, '\2', '' )
+  return linenumber
+endfunction
+
+function! GetMsdevFile2(line)
+  let file = expand("%:p:h") . "/" . GetMsdevFile(a:line)
+  let file
+  return file
+endfunction
+
+function! GotoMsdevMake()
+  exec "cd ".$DIRECTORY."\\.."
+  let l = getline(".")
+  let file = GetMsdevFile(l)
+  let linenumber = GetMsdevLineNumber(l)
+  winc p
+  exec "e +" . linenumber. " " . file
+  exec "cd -"
+endfunction
+
+function! GetGCCFile(line)
+  let mx = '^\([a-zA-Z_/\.0-9:\- ]*\):[0-9]\+: .*'
+  let line = matchstr( a:line, mx )
+  let file = substitute( line, mx, '\1', '' )
+  let file = substitute( file, '\\', '/', '' )
+  return file
+endfunction
+
+function! GetGCCLineNumber(line)
+  let mx = '^\([a-zA-Z_/\.0-9:\- ]*\):\([0-9]\+\):.*'
+  let line = matchstr( a:line, mx )
+  let linenumber = substitute( line, mx, '\2', '' )
+  return linenumber
+endfunction
+
+
+function! GotoGCCMake()
+  exec "cd ".$DIRECTORY."\\.."
+  let l = getline(".")
+  let file = GetGCCFile(l)
+  let linenumber = GetGCCLineNumber(l)
+  winc p
+  exec "e +" . linenumber. " " . file
+  exec "cd -"
+endfunction
+
+function! GetCSharpFile(line)
+  "let mx = '^\d*>\([a-zA-Z_/\.0-9:\- ]*\)(\([0-9]\+\),.*'
+  let mx = '^\([a-zA-Z_/\.0-9:\- ]*\)(\([0-9]\+\),.*'
+  let line = matchstr( a:line, mx )
+  let linenumber = substitute( line, mx, '\1', '' )
+  return linenumber
+endfunction
+
+function! GetCSharpNumber(line)
+  "let mx = '^\d*>\([a-zA-Z_/\.0-9:\- ]*\)(\([0-9]\+\),.*'
+  let mx = '^\([a-zA-Z_/\.0-9:\- ]*\)(\([0-9]\+\),.*'
+  let line = matchstr( a:line, mx )
+  let linenumber = substitute( line, mx, '\2', '' )
+  return linenumber
+endfunction
+
+function! GotoCSharpMake()
+  let l = getline(".")
+  let file = 'project/' . GetCSharpFile(l)
+  let linenumber = GetCSharpNumber(l)
+  winc p
+  exec "e +" . linenumber. " " . file
+endfunction
+
+nmap zb 85hzs
+nmap zf 85l10hzs10l
+nmap ,e :Sexplore<CR>
+nmap  :e#<cr>
+nmap ,E :Explore<CR>
+nmap ,l :ls<cr>
+
+nmap ,q :bd<cr>
+nmap ,p "*p
+nmap ,P "*P
+nmap ,y "*y
+
+" Source the .vimrc
+nmap ,s :source $VIM/_vimrc<cr>
+nmap ,S :source %<cr>
+
+map ,c :Calendar<cr>
+" C++ comments
+"map ,c mz^i/*<ESC>$a*/<ESC>`z
+"map ,C mz^2x$Xx`z
+"vmap ,c <ESC>`<i/*<ESC>`>a*/<ESC>
+"vmap ,C <ESC>`<2x`>h2x
+
+" Movement between buffers
+map ,k k
+map ,j j
+map ,u 
+map ,h h
+"map ,bn :bn<cr>
+"map ,bp :bp<cr>
+
+"VMAPs
+" Sort the visually selected range by pressing "s"
+vmap s :!sort<cr>
+vmap S :!c:\\cygwin\\bin\\sort -r<cr>
+vmap r :!c:\\cygwin\\bin\\sort -k2 -t.<cr>
+
+vmap / y/<C-R>"<CR>
+
+
+nmap ,r0 :e $temp/search0<CR>:call MapGotoBuff()<cr>
+nmap ,r1 :e $temp/search1<CR>:call MapGotoBuff()<cr>
+nmap ,r2 :e $temp/search2<CR>:call MapGotoBuff()<cr>
+nmap ,r3 :e $temp/search3<CR>:call MapGotoBuff()<cr>
+nmap ,r4 :e $temp/search4<CR>:call MapGotoBuff()<cr>
+nmap ,r5 :e $temp/search5<CR>:call MapGotoBuff()<cr>
+nmap ,r6 :e $temp/search6<CR>:call MapGotoBuff()<cr>
+nmap ,r7 :e $temp/search7<CR>:call MapGotoBuff()<cr>
+nmap ,r8 :e $temp/search8<CR>:call MapGotoBuff()<cr>
+nmap ,r9 :e $temp/search9<CR>:call MapGotoBuff()<cr>
+nmap ,rf :call Filter()<CR>
+nmap ,rs :call Syntax()<CR>
+
+nmap ,xa :e c:/dev/__MAIN__/code/tags<cr>
+nmap ,xb :echo unused
+nmap ,xc :e c:/work/scratch.cpp<CR>
+nmap ,xe :e!<cr>
+nmap ,xg :call FilterLinesWithWord()<cr>
+nmap ,xh :echo unused
+nmap ,xl :e C:/Users/jhudgins/AppData/LocalLow/company/product/log.txt<cr>
+nmap ,xt :e c:/work/work.md<cr>
+
+"nmap ,xt :e c:/work/plan.txt<cr>
+nmap ,xy :e c:/dev/users/jhudgins/notes/notes.md<cr>
+"nmap ,xu :e ++enc=utf-16le<cr>
+
+nmap ,xx :let @*=expand("%:p")<cr>
+nmap ,xp :bp<cr>
+nmap ,xn :bn<cr>
+nmap ,xq :call UndiffBuffer()<cr>:q<cr>:call UndiffBuffer()<cr>:q<cr>:set co=120<cr>
+nmap ,xs :e $config_dir/common.vimrc<cr>
+
+nmap ,x0 :e c:/work/scratch0.txt<CR>
+nmap ,x1 :e c:/work/scratch1.txt<CR>
+nmap ,x2 :e c:/work/scratch2.txt<CR>
+nmap ,x3 :e c:/work/scratch3.txt<CR>
+nmap ,x4 :e c:/work/scratch4.txt<CR>
+nmap ,x5 :e c:/work/scratch5.txt<CR>
+nmap ,x6 :e c:/work/scratch6.txt<CR>
+nmap ,x7 :e c:/work/scratch7.txt<CR>
+nmap ,x8 :e c:/work/scratch8.txt<CR>
+nmap ,x9 :e c:/work/scratch9.txt<CR>
+nmap ,x- :e c:/work/quotes.txt<CR>
+nmap ,xj :%y<cr>:new<cr>p:%!python -mjson.tool<cr> 
+
+function! MakeOut( filename )
+	exec ":e " . a:filename
+	call MakeBuffer()
+   normal z
+endfunction
+
+function! MakeBuffer()
+  normal! gg
+  exec "/): error\\|failed"
+  nnoremap <buffer> <cr> :call GotoFbuildMake()<cr>
+endfunction
+
+function! MakeGCCErr()
+  normal! gg
+  exec "/: error:"
+  nnoremap <buffer> <cr> :call GotoGCCMake()<cr>
+  nnoremap <buffer>  :call GotoGCCMake()<cr>
+endfunction
+
+function! MakeGCCOut( filename )
+  exec ":e " . a:filename
+  call MakeGCCErr()
+endfunction
+
+function! MakeCSharp()
+  normal! gg
+  exec "/: error "
+  nnoremap <buffer> <cr> :call GotoCSharpMake()<cr>
+endfunction
+
+"nmap ,xxr :call MakeOut("Project/NET/Xbox\ Release/BuildLog.htm")<CR>
+nmap ,mc :call MakeCSharp()<CR>
+nmap ,mo :e C:\Users\jhudgins\Local Settings\Unity\Editor\Editor.log<cr>:call MakeCSharp()<cr>
+"nmap ,mo :call MakeOut( "c:/work/build.log" )<cr>
+nmap ,mm :call MakeBuffer()<CR>
+nmap ,mq :call MakeGCCErr()<cr>
+nmap ,mt :call MakeOut( "c:/work/tty.txt" )<cr>
+nmap ,xm :let g:xml_syntax_folding = 1<cr>:setlocal foldmethod=syntax<cr>:e!<cr>
+
+function! OpenLine()
+  let l = getline(".")
+  let f = substitute( l, '/cygdrive/c/\(.*\)', 'c:/\1', '' )
+  exec ":e " . f
+endfunction
+
+function! FilterLinesWithWord()
+  let w = expand("<cword>")
+  exec ":g/" . w . "/d"
+endfunction
+
+let g:p4DefaultDiffOptions = '-du10'
+let p4UseVimDiff2 = 1
+
+nmap ,wq :w<cr>:q!<cr>:q<cr>:q<cr>
+nmap ,ww :w<cr>
+nmap ,wk k
+nmap ,wj j
+nmap ,wa _
+nmap ,w= =
+nmap ,wd :set co=300<cr>=100+
+nmap ,wf :set co=300<cr>:set nowrap<cr>
+nmap ,ws :set co=120<cr>:set wrap<cr>
+
+runtime! plugin/*.vim
+runtime! $configdir/vimfiles/plugin/*.vim
+
+function! DS()
+	set scrollbind
+	winc w
+	set scrollbind
+	set co=500
+	winc =
+	winc w
+endfunction
+
+nmap ,xz :call DS()<cr>
+
+function! DoPrettyXML()
+  " save the filetype so we can restore it later
+  let l:origft = &ft
+  set ft=
+  " delete the xml header if it exists. This will
+  " permit us to surround the document with fake tags
+  " without creating invalid xml.
+  1s/<?xml .*?>//e
+  " insert fake tags around the entire document.
+  " This will permit us to pretty-format excerpts of
+  " XML that may contain multiple top-level elements.
+  0put ='<PrettyXML>'
+  $put ='</PrettyXML>'
+  silent %!xmllint --format -
+  " xmllint will insert an <?xml?> header. it's easy enough to delete
+  " if you don't want it.
+  " delete the fake tags
+  2d
+  $d
+  " restore the 'normal' indentation, which is one extra level
+  " too deep due to the extra tags we wrapped around the document.
+  silent %<
+  " back to home
+  1
+  " restore the filetype
+  exe "set ft=" . l:origft
+endfunction
+command! PrettyXML call DoPrettyXML()
+
+
+
+function! AlphaBlankDxt()
+    exec ":%!xxd<cr>"
+    exec ":9,$s/: .... .... .... ..../: ffff ffff ffff ffff/g<cr>"
+    exec "Gdd"
+    exec ":%!xxd -r<cr>"
+    exec ":w<cr>"
+endfunction
+"nmap ,ad :call AlphaBlankDxt()
+nmap ,ad :%!xxd<cr>:9,$s/: .... .... .... ..../: ffff ffff ffff ffff/g<cr>Gdd:%!xxd -r<cr>:w<cr>:bn<cr>
+nmap ,aa :%!xxd<cr>:9,$s/ .... .... .... ....  / ffff ffff 0000 0000/g<cr>Gdd:%!xxd -r<cr>:w<cr>:bn<cr>
+nmap ,an :%!xxd<cr>:9,$s/: .... .... .... .... \(.... .... .... ....\)  / \1 ffff ffff 0000 0000/g<cr>Gdd:%!xxd -r<cr>:w<cr>:bn<cr>
+nmap ,ar yypppdf{f,Dk0df,f,Dk0d2f,f,Dkd3f,f}DJJJj
+
+" map v 0yf<f<p0f<hcf<,f cw,,f<cw,,,,,,,,,,,,,,,,,,,,,,,* My Contacts ::: listreplace,* ,f>xxj
+
+set tags=c:/git/Game/tags
+
+function! GitBlame()
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    cd `=topdir`
+    set co=300
+    new
+    silent exec "r !git blame " . relative
+    normal ggdd
+    set nomod
+endfunction
+
+function! GitDiff(revision)
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    cd `=topdir`
+    set co=300
+    sp
+    winc _
+    diffthis
+    vert new
+    silent exec "r !git show " . a:revision . ":" . relative
+    normal ggdd
+    set nomod
+    diffthis
+    winc l
+endfunction
+
+function! GitDiffPrev()
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)\n', '\1', '')
+    cd `=topdir`
+    let logline = split(system("git log -2 --pretty=oneline \"" . relative . "\""), "\n")[1]
+    let revision = substitute(logline, '\(\W*\) .*', '\1', '')
+    set co=300
+    sp
+    winc _
+    diffthis
+    vert new
+    silent exec "r !git show " . revision . ":" . relative
+    normal ggdd
+    set nomod
+    diffthis
+    winc l
+endfunction
+
+function! GitDiffVersion()
+    let default = histget("input", -1)
+    let revision = input("revision [" . default . "]: ") 
+    if revision == ""
+        let revision = default
+    endif
+    call histadd("input", revision)
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)\n', '\1', '')
+    cd `=topdir`
+    set co=300
+    sp
+    winc _
+    diffthis
+    vert new
+    silent exec "r !git show " . revision . ":" . relative
+    normal ggdd
+    set nomod
+    diffthis
+    winc l
+endfunction
+
+function! GitLog(options)
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let g:relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    cd `=topdir`
+    new
+    silent exec "r !git log " . a:options . " " . g:relative
+    normal gg
+    set nomod
+    set filetype=git
+    command! -range -buffer -nargs=0 CmdGitCommitDiff2
+            \ :call GitCommitDiff2(<line1>, <line2>)
+    nnoremap <buffer> <cr> :call GitCommitDiff()<cr>
+    vmap <silent> <buffer> <cr> :CmdGitCommitDiff2<cr>
+endfunction
+
+function! GitCommitDiff()
+    let l = getline(".")
+    let commit = substitute(l, '^[| *]*commit \(.*\)', '\1', '')
+    set co=300
+    new
+    winc _
+    exec 'edit' g:relative
+    diffthis
+    vert new
+    silent exec "r !git show " . commit . ":" . g:relative
+    normal ggdd
+    set nomod
+    silent exec "file " . commit . ":" . g:relative
+    diffthis
+    winc l
+endfunction
+
+function! GitCommitDiff2(line1, line2)
+    let commit1 = substitute(getline(a:line1), '^[| *]*commit \(.*\)', '\1', '')
+    let commit2 = substitute(getline(a:line2), '^[| *]*commit \(.*\)', '\1', '')
+    set co=300
+    new
+    winc _
+    silent exec "r !git show " . commit1 . ":" . g:relative
+    normal ggdd
+    set nomod
+    silent exec "file " . commit1 . ":" . g:relative
+    diffthis
+    vert new
+    silent exec "r !git show " . commit2 . ":" . g:relative
+    normal ggdd
+    set nomod
+    silent exec "file " . commit2 . ":" . g:relative
+    diffthis
+    winc l
+endfunction
+
+function! GitCheckout()
+    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
+    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
+    let g:relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    cd `=topdir`
+    silent exec "!git checkout -- " . g:relative
+endfunction
+
+
+function! UniqueProcmonFiles()
+    exec '%s/"[^"]*",//'
+    exec '%s/"[^"]*",//'
+    exec '%s/"[^"]*",//'
+    exec '%s/"[^"]*",//'
+    exec '%s/,.*//'
+    exec ':%!sort -u'
+endfunction
+
+nmap ,gb  :call GitBlame()<cr>
+nmap ,gdh :call GitDiff("HEAD")<cr>
+nmap ,gdo :call GitDiff("origin")<cr>
+nmap ,gdp :call GitDiffPrev()<cr>
+nmap ,gdv :call GitDiffVersion()<cr>
+nmap ,gla :call GitLog("")<cr>
+nmap ,glb :call GitLog("--first-parent")<cr>
+nmap ,glg :call GitLog("--graph")<cr>
+nmap ,gc :call GitCheckout()<cr>
+

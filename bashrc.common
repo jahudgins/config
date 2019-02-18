@@ -5,7 +5,7 @@
 # with this software. 
 # If not, see <http://creativecommons.org/publicdomain/zero/1.0/>. 
 
-# base-files version 4.2-4
+# base-files version 4.1-1
 
 # ~/.bashrc: executed by bash(1) for interactive shells.
 
@@ -107,7 +107,7 @@
 # alias fgrep='fgrep --color=auto'              # show differences in colour
 #
 # Some shortcuts for different directory listings
-alias ls='ls -hF --color=tty'                 # classify files in colour
+# alias ls='ls -hF --color=tty'                 # classify files in colour
 # alias dir='ls --color=auto --format=vertical'
 # alias vdir='ls --color=auto --format=long'
 # alias ll='ls -l'                              # long list
@@ -198,9 +198,98 @@ alias ls='ls -hF --color=tty'                 # classify files in colour
 # alias cd=cd_func
 
 set -o vi
+shopt -s nocaseglob
 mount -f c:/ /c
-export PATH=$PATH:/c/vim/vim81
-gv()
+mount -f d:/ /d
+mount -f d:/tdrive/ /t
+
+# History
+shopt -s histappend                      # append to history, don't overwrite it
+export HISTCONTROL=ignoredups:erasedups  # no duplicate entries
+export HISTSIZE=100000                   # big big history
+export HISTFILESIZE=100000               # big big history
+shopt -s histappend                      # Make bash append rather than overwrite the history on disk
+export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND" # Save reload hist after each cmd
+
+export PYTHONUNBUFFERED=1
+export PATH=.:/c/work/bin:$PATH:/c/Windows/Microsoft.NET/Framework64/v4.0.30319:/c/Program\ Files\ \(x86\)/Microsoft\ Visual\ Studio\ 11.0/Common7/IDE/:/c/Vim/$VIMVERSION
+
+function gv
 {
-    gvim `cygpath -m $*` &
+  export args=""
+  for i in "$@"
+  do
+    export args="$args `cygpath -m $i`"
+  done
+  gvim $args &
 }
+complete -o default -F _longopt gv
+
+function mtags
+{
+  export tag_location="$1"
+  shift
+  echo ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+}
+
+function icode
+{
+    export CSEARCHINDEX=c:/work/Code$1.searchIndex
+    cindex -reset `find c:/dev/$1/code -mindepth 1 -maxdepth 1 -type d | grep -v External | tr "\n\r" "  "`
+}
+
+export TEMP=c:/work/temp
+alias ls='ls --color'
+
+. .agent > /dev/null
+ps -p $SSH_AGENT_PID | grep ssh-agent > /dev/null || {
+    ssh-agent > .agent
+    . .agent > /dev/null
+}
+
+function isadmin()
+{
+    net session > /dev/null 2>&1
+    if [ $? -eq 0 ]; then echo "admin"
+    else echo "user"; fi
+}
+
+function gl()
+{
+    git ls-files --others --exclude-standard $@
+    git diff --name-only $@
+}
+
+function gd()
+{
+    rm -rf /c/work/diff
+    olddir=/c/work/diff/old
+    newdir=/c/work/diff/new
+    mkdir -p $olddir
+    mkdir -p $newdir
+    filelist=
+    for file in $(git diff --name-only $1..$2);
+    do
+        parentpath=$(dirname "$file")
+        mkdir -p "$olddir/$parentpath"
+        mkdir -p "$newdir/$parentpath"
+        git show $1:$file > "$newdir/$file"
+        git show $2:$file > "$olddir/$file"
+        filelist="$filelist $olddir/$file $newdir/$file"
+    done
+    gv $filelist &
+}
+
+function gbd()
+{
+    gd $1 $(git merge-base $1 origin/master)
+}
+ 
+ 
+alias gr='git checkout .; git clean -fd'
+alias gvd='gv $(git diff --name-only; git ls-files --others --exclude-standard)'
+alias greview='gv $(git diff --cached --name-only)'
+
+alias btag='cd /c/git/project; cat /c/work/tag.header > tmp; find . -type f -iname \*.cs | ctags --filter=yes --languages=C# >> tmp; python c:/dev/users/jhudgins/bin/tagsort.py tmp > tags; rm tmp'
+

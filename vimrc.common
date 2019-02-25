@@ -3,6 +3,7 @@ set writebackup         " keep a backup file
 
 let &backupdir = work_dir . '/backupdir'
 let &undodir = work_dir . '/undodir'
+let &directory = work_dir . '/backupdir'
 let $temp = work_dir .'/temp'
 let $config_dir = git_dir .'/config'
 set expandtab
@@ -390,17 +391,20 @@ nmap ,xe :e!<cr>
 nmap ,xg :call FilterLinesWithWord()<cr>
 nmap ,xh :echo unused
 nmap ,xl :e C:/Users/jhudgins/AppData/LocalLow/company/product/log.txt<cr>
-nmap ,xt :e c:/work/work.md<cr>
+nmap ,xt1 :e c:/work/web_odds/README.md<cr>
+nmap ,xt2 :e c:/work/beestone/README.md<cr>
+nmap ,xt3 :e c:/work/rpb_safety/README.md<cr>
+nmap ,xt4 :e c:/work/track_odds/README.md<cr>
 
 "nmap ,xt :e c:/work/plan.txt<cr>
-nmap ,xy :e c:/dev/users/jhudgins/notes/notes.md<cr>
+nmap ,xy :e c:/git/config/notes.md<cr>
 "nmap ,xu :e ++enc=utf-16le<cr>
 
 nmap ,xx :let @*=expand("%:p")<cr>
 nmap ,xp :bp<cr>
 nmap ,xn :bn<cr>
 nmap ,xq :call UndiffBuffer()<cr>:q<cr>:call UndiffBuffer()<cr>:q<cr>:set co=120<cr>
-nmap ,xs :e $config_dir/common.vimrc<cr>
+nmap ,xs :e $config_dir/vimrc.common<cr>
 
 nmap ,x0 :e c:/work/scratch0.txt<CR>
 nmap ,x1 :e c:/work/scratch1.txt<CR>

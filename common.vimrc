@@ -1,23 +1,38 @@
 set backup              " keep a backup file
 set writebackup         " keep a backup file
-
-let &backupdir = work_dir . '/backupdir'
-let &undodir = work_dir . '/undodir'
-let &directory = work_dir . '/backupdir'
-let $temp = work_dir .'/temp'
-let $config_dir = git_dir .'/config'
-set expandtab
-set tabstop=4
-set shiftwidth=4
-let &runtimepath = $config_dir . '/config/vimruntime,' . &runtimepath
-
-if has('win32')
-    set shell=C:\Windows\system32\cmd.exe
-endif
+set backupdir=$workdir/backupdir
+set undodir=$workdir/backupdir
+set directory=$workdir
 
 silent! unmap 
+
+"uncomment the following line to *not* load perforce (in case you are offline)
+let loaded_perforce=1
+
+set runtimepath=$configdir/vimfiles,C:/Vim/vimfiles,C:/Vim/$vimversion,C:/Vim/vimfiles/after
+runtime! plugin/*.vim
+runtime! $configdir/vimfiles/autoload/*.vim
+runtime! $configdir/vimfiles/plugin/*.vim
+runtime! $configdir/vimfiles/perforce/*.vim
+
+function! BranchUberBot()
+  let g:p4Depot = 'depot'
+  let client=expand('jhudgins_uber_bot_$MACHINE')
+  call Jp4client(client)
+  call perforce#PFSwitch(1, 'perfvpn01.riotgames.com:1666', client, 'ext.jhudgins')
+  cd $devdir/UBER_BOT/code
+  set tags=$devdir/UBER_BOT/code/tags
+endfunction
+
+map ,bu :call BranchUberBot()<cr>
+
+
 set nojoinspaces
 set nocompatible
+set shell=cmd.exe
+"set shell=bash.exe
+"set shellcmdflag=--login\ -c
+"set sxq=\"
 
 " BEGIN from vimrc_example.vim
 " I don't like the way vimrc_example works (it seems to force line breaks on text files),
@@ -69,11 +84,13 @@ endif
 
 " END from vimrc_example.vim
 "
+au BufRead,BufNewFile SConstruct setfiletype python
 
 behave xterm
 set selectmode=mouse
 set guioptions=agimrt
 set guifont=lucida_console:h9
+"set guifont=courier:h7
 set lines=110
 set co=120
 set textwidth=0
@@ -88,9 +105,70 @@ set wrapscan
 let mapleader=","
 
 let python_highlight_space_errors = 1
-let $VIM="c:/Vim"
-let relative=0
 
+let temp = $workdir.'\temp'
+let $temp = $workdir.'\temp'
+let $VIM="c:/Vim"
+
+function! GlobalGotoTag(switchWin)
+  let l = getline(".")
+  let file = substitute( l, '^[^	]*	\([^	]*\)	.*', '\1', '' )
+  let linenumber = substitute( l, '^[^	]*	[^	]*	\([^	]*\)', '\1', '' )
+  if a:switchWin==1
+    winc p
+  endif
+  exec "e +".linenumber.  " " . file
+  if a:switchWin==1
+    winc p
+  endif
+endfunction
+
+function! GlobalOpen( scratch )
+  exec ":e " . a:scratch
+  nnoremap <buffer> <cr> :call GlobalGotoTag(1)<cr>
+  nnoremap <buffer> o :call GlobalGotoTag(0)<cr>
+endfunction
+
+function! GlobalRefTags( scratch )
+  let cw = expand("<cword>")
+  silent exec ":! global -tr " .cw. " > " . a:scratch
+  sp
+  call GlobalOpen( a:scratch )
+endfunction
+
+function! GlobalAllTags( scratch )
+  let cw = expand("<cword>")
+  silent exec ":! global -ts " .cw. " > " . a:scratch
+  sp
+  call GlobalOpen( a:scratch )
+endfunction
+
+map ,tt :call GlobalAllTags( "c:/work/glob0.txt" )<cr>
+map ,tr :call GlobalRefTags( "c:/work/glob0.txt" )<cr>
+map ,T0 :call GlobalRefTags( "c:/work/glob0.txt" )<cr>
+map ,T1 :call GlobalRefTags( "c:/work/glob1.txt" )<cr>
+map ,T2 :call GlobalRefTags( "c:/work/glob2.txt" )<cr>
+map ,T3 :call GlobalRefTags( "c:/work/glob3.txt" )<cr>
+map ,T4 :call GlobalRefTags( "c:/work/glob4.txt" )<cr>
+map ,T5 :call GlobalRefTags( "c:/work/glob5.txt" )<cr>
+map ,T6 :call GlobalRefTags( "c:/work/glob6.txt" )<cr>
+map ,T7 :call GlobalRefTags( "c:/work/glob7.txt" )<cr>
+map ,T8 :call GlobalRefTags( "c:/work/glob8.txt" )<cr>
+map ,T9 :call GlobalRefTags( "c:/work/glob9.txt" )<cr>
+
+map ,i0 :call GlobalOpen( "c:/work/glob0.txt" )<cr>
+map ,i1 :call GlobalOpen( "c:/work/glob1.txt" )<cr>
+map ,i2 :call GlobalOpen( "c:/work/glob2.txt" )<cr>
+map ,i3 :call GlobalOpen( "c:/work/glob3.txt" )<cr>
+map ,i4 :call GlobalOpen( "c:/work/glob4.txt" )<cr>
+map ,i5 :call GlobalOpen( "c:/work/glob5.txt" )<cr>
+map ,i6 :call GlobalOpen( "c:/work/glob6.txt" )<cr>
+map ,i7 :call GlobalOpen( "c:/work/glob7.txt" )<cr>
+map ,i8 :call GlobalOpen( "c:/work/glob8.txt" )<cr>
+map ,i9 :call GlobalOpen( "c:/work/glob9.txt" )<cr>
+
+
+let relative=0
 com! -nargs=* T tselect
 " why do I have  ?  It doesn't seem to work right otherwise
 map T :tjump <cr>
@@ -105,11 +183,17 @@ function! TagJumpOtherWindow()
   winc p
 endfunction
 
+" joinspaces:  insert two spaces after a period with every joining of lines. 
+set joinspaces
+
 " lazyredraw:  do not update screen while executing macros
 set lazyredraw
 
 " laststatus:  Always show status line, even for only one buffer.
 set laststatus=2
+
+" Use ALT-D to delete all of the buffers
+map ä :1,4000bdel<cr>
 
 function! DA()
 	let base=$temp."change_orig.c "
@@ -250,6 +334,21 @@ set diffopt=iwhite
 
 map  :e#<cr>
 
+function! GetFbuildFile(line)
+  let mx = '^\([a-zA-Z_/\\\.0-9:\- ]*\)(\(\d\+\)): '
+  let file = matchstr( a:line, mx )
+  let file = substitute( file, mx, '\1', '' )
+  let file = substitute( file, '\\', '/', '' )
+  return file
+endfunction
+
+function! GetFbuildLineNumber(line)
+  let mx = '^\([a-zA-Z_/\\\.0-9:\- ]*\)(\(\d\+\)): '
+  let line = matchstr( a:line, mx )
+  let linenumber = substitute( line, mx, '\2', '' )
+  return linenumber
+endfunction
+
 function! GetMsdevFile(line)
   let mx = '^[0-9]*>\([a-zA-Z_/\.0-9:\- ]*\)'
   let file = matchstr( a:line, mx )
@@ -269,6 +368,16 @@ function! GetMsdevFile2(line)
   let file = expand("%:p:h") . "/" . GetMsdevFile(a:line)
   let file
   return file
+endfunction
+
+function! GotoFbuildMake()
+  " exec "cd ".$DIRECTORY."\\.."
+  let l = getline(".")
+  let file = GetFbuildFile(l)
+  let linenumber = GetFbuildLineNumber(l)
+  winc p
+  exec "e +" . linenumber. " " . file
+  exec "cd -"
 endfunction
 
 function! GotoMsdevMake()
@@ -325,7 +434,7 @@ endfunction
 
 function! GotoCSharpMake()
   let l = getline(".")
-  let file = 'project/' . GetCSharpFile(l)
+  let file = 'somewhere/' . GetCSharpFile(l)
   let linenumber = GetCSharpNumber(l)
   winc p
   exec "e +" . linenumber. " " . file
@@ -384,27 +493,30 @@ nmap ,r9 :e $temp/search9<CR>:call MapGotoBuff()<cr>
 nmap ,rf :call Filter()<CR>
 nmap ,rs :call Syntax()<CR>
 
-nmap ,xa :e c:/dev/__MAIN__/code/tags<cr>
+nmap ,xa :execute 'e  c:\somewhere\tags'<cr>
 nmap ,xb :echo unused
 nmap ,xc :e c:/work/scratch.cpp<CR>
 nmap ,xe :e!<cr>
 nmap ,xg :call FilterLinesWithWord()<cr>
 nmap ,xh :echo unused
-nmap ,xl :e C:/Users/jhudgins/AppData/LocalLow/company/product/log.txt<cr>
-nmap ,xt1 :e c:/work/web_odds/README.md<cr>
-nmap ,xt2 :e c:/work/beestone/README.md<cr>
-nmap ,xt3 :e c:/work/rpb_safety/README.md<cr>
-nmap ,xt4 :e c:/work/track_odds/README.md<cr>
-
-"nmap ,xt :e c:/work/plan.txt<cr>
-nmap ,xy :e c:/git/config/notes.md<cr>
-"nmap ,xu :e ++enc=utf-16le<cr>
+nmap ,xl :e c:/somelogfile.log<cr>
+nmap ,xt :e c:/work/todo.md<cr>
+nmap ,xy :e c:/work/notes.md<cr>
 
 nmap ,xx :let @*=expand("%:p")<cr>
+
+nmap ,xd :call Jp4vdiff()<cr>
+"nmap ,xd :set co=300<cr>:PVDiff<cr>
+nmap ,xf :PFilelog<cr>
+nmap ,xi :PEdit<cr>
+nmap ,xr :PRevert<cr>
+
 nmap ,xp :bp<cr>
 nmap ,xn :bn<cr>
+nmap ,xo :execute 'edit' substitute(substitute(@*, "^.", "", ""), "...$", "", "")<cr>
+
 nmap ,xq :call UndiffBuffer()<cr>:q<cr>:call UndiffBuffer()<cr>:q<cr>:set co=120<cr>
-nmap ,xs :e $config_dir/vimrc.common<cr>
+nmap ,xs :e $configdir/common.vimrc<cr>
 
 nmap ,x0 :e c:/work/scratch0.txt<CR>
 nmap ,x1 :e c:/work/scratch1.txt<CR>
@@ -444,15 +556,16 @@ function! MakeGCCOut( filename )
 endfunction
 
 function! MakeCSharp()
-  normal! gg
-  exec "/: error "
+  normal! G
+  exec "?: error "
   nnoremap <buffer> <cr> :call GotoCSharpMake()<cr>
 endfunction
 
 "nmap ,xxr :call MakeOut("Project/NET/Xbox\ Release/BuildLog.htm")<CR>
 nmap ,mc :call MakeCSharp()<CR>
-nmap ,mo :e C:\Users\jhudgins\Local Settings\Unity\Editor\Editor.log<cr>:call MakeCSharp()<cr>
-"nmap ,mo :call MakeOut( "c:/work/build.log" )<cr>
+nmap ,mo :call MakeOut( "c:/work/build.log" )<cr>
+nmap ,mr :call MakeOut( "c:/perforce/branch/obj/release/BuildLog.htm" )<cr>
+nmap ,md :call MakeOut( "c:/perforce/branch/obj/debug/BuildLog.htm" )<cr>
 nmap ,mm :call MakeBuffer()<CR>
 nmap ,mq :call MakeGCCErr()<cr>
 nmap ,mt :call MakeOut( "c:/work/tty.txt" )<cr>
@@ -460,7 +573,7 @@ nmap ,xm :let g:xml_syntax_folding = 1<cr>:setlocal foldmethod=syntax<cr>:e!<cr>
 
 function! OpenLine()
   let l = getline(".")
-  let f = substitute( l, '/cygdrive/c/\(.*\)', 'c:/\1', '' )
+  let f = substitute( l, '/cygdrive/\(.\)/\(.*\)', '\1:/\2', '' )
   exec ":e " . f
 endfunction
 
@@ -542,12 +655,13 @@ nmap ,ar yypppdf{f,Dk0df,f,Dk0d2f,f,Dkd3f,f}DJJJj
 
 " map v 0yf<f<p0f<hcf<,f cw,,f<cw,,,,,,,,,,,,,,,,,,,,,,,* My Contacts ::: listreplace,* ,f>xxj
 
-set tags=c:/git/Game/tags
+"set tags=c:/ares/tags
 
+" function! FindGitRoot()
 function! GitBlame()
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
     set co=300
     new
@@ -557,9 +671,9 @@ function! GitBlame()
 endfunction
 
 function! GitDiff(revision)
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
     set co=300
     sp
@@ -574,10 +688,9 @@ function! GitDiff(revision)
 endfunction
 
 function! GitDiffPrev()
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)\n', '\1', '')
-    cd `=topdir`
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     let logline = split(system("git log -2 --pretty=oneline \"" . relative . "\""), "\n")[1]
     let revision = substitute(logline, '\(\W*\) .*', '\1', '')
     set co=300
@@ -599,9 +712,10 @@ function! GitDiffVersion()
         let revision = default
     endif
     call histadd("input", revision)
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)\n', '\1', '')
+
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
     set co=300
     sp
@@ -616,9 +730,9 @@ function! GitDiffVersion()
 endfunction
 
 function! GitLog(options)
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let g:relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let g:relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
     new
     silent exec "r !git log " . a:options . " " . g:relative
@@ -669,11 +783,11 @@ function! GitCommitDiff2(line1, line2)
 endfunction
 
 function! GitCheckout()
-    let cygfile = system("cygpath -u '" . expand("%:p") . "'")
-    let topdir = substitute(cygfile, '/c/git/\([^/]*\)/.*', 'c:/git/\1', '')
-    let g:relative = substitute(cygfile, '/c/git/[^/]*/\(.*\)', '\1', '')
+    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
+    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
-    silent exec "!git checkout -- " . g:relative
+    silent exec "!git checkout -- " . relative
 endfunction
 
 
@@ -691,8 +805,8 @@ nmap ,gdh :call GitDiff("HEAD")<cr>
 nmap ,gdo :call GitDiff("origin")<cr>
 nmap ,gdp :call GitDiffPrev()<cr>
 nmap ,gdv :call GitDiffVersion()<cr>
-nmap ,gla :call GitLog("")<cr>
+nmap ,gla :call GitLog("--follow")<cr>
 nmap ,glb :call GitLog("--first-parent")<cr>
 nmap ,glg :call GitLog("--graph")<cr>
+nmap ,gln :call GitLog("")<cr>
 nmap ,gc :call GitCheckout()<cr>
-

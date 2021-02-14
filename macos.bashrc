@@ -199,9 +199,6 @@
 
 set -o vi
 shopt -s nocaseglob
-mount -f c:/ /c
-mount -f d:/ /d
-mount -f d:/tdrive/ /t
 
 # History
 shopt -s histappend                      # append to history, don't overwrite it
@@ -212,18 +209,107 @@ shopt -s histappend                      # Make bash append rather than overwrit
 export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND" # Save reload hist after each cmd
 
 export PYTHONUNBUFFERED=1
-export PATH=.:/c/work/bin:$PATH:/c/Windows/Microsoft.NET/Framework64/v4.0.30319:/c/Program\ Files\ \(x86\)/Microsoft\ Visual\ Studio\ 11.0/Common7/IDE/:/c/Vim/$VIMVERSION
+export PATH=.:~/bin:~/work/bin:~/dev/config/bin:$PATH
+
+
+#######################
+# P4 Vars and Aliases #
+#######################
+
+export P4PORT=perflax01:1666
+export P4CLIENT=jhudgins_mac
+export P4MERGE='vim'
+export P4MERGEUNICODE='vim'
+export P4EDITOR='vim'
+export P4CHARSET=utf8
+export P4COMMANDCHARSET=utf8
+
+function p4list() {
+  export tempfiles=`mktemp -t p4list`
+  for i in `p4 opened $@ | sed -e 's/#.*//g'`
+  do
+    echo `p4 where $i | sed -e 's/.* //g'`
+  done
+}
+
+function p4syncopened() {
+  export tempscript=`mktemp`
+  echo "#!bash" > $tempscript
+  p4list | sed -e "1~300s/^/p4 sync $@ /" | sed -e 's/p4 sync/\
+\
+p4 sync/' >> $tempscript
+  chmod +x $tempscript
+  $tempscript
+  rm $tempscript
+}
+
+function p4whichsync() {
+  p4syncopened -n 2>&1 | grep -v "up-to-date"
+}
+
+
+###############
+# SVN Aliases #
+###############
+
+function svnmod() {
+    svn status | grep "^[AM]" | sed -e 's/^.\{8\}/ /' | sort
+}
+function svnopened() {
+    svn st $@ | grep -v "^\?" | sed -e 's/^.\{8\}//'
+}
+function svncl() { 
+    export tempfile=`mktemp --tmpdir=e:/work/temp`
+    svnopened > $tempfile
+    gvim $tempfile
+    svn cl $1 --targets $tempfile
+    rm $tempfile
+}
+function svnci() { 
+    export tempfile=`mktemp --tmpdir=e:/work/temp`
+    svnopened > $tempfile
+    gvim $tempfile
+    for i in `cat $tempfile`;
+    do
+        if file $i | grep -v --quiet "CRLF\|directory";
+        then
+            echo File $i is not a DOS file
+            rm $tempfile
+            return 0
+        fi
+    done
+    svn ci --targets $tempfile
+    rm $tempfile
+}
+
+function svnmine() {
+    svn log -r HEAD:0 --limit 500 | sed -n '/jhudgins/,/-----$/p'
+}
+
+function svnmonth() {
+    let lastMonth=$(($1 - 1))
+    let thisMonth=$1
+    svn log -r {2013-$lastMonth-01}:{2013-$thisMonth-01} | sed -n '/jhudgins/,/-----$/p'
+}
+
+# svn  log -r HEAD:0 --limit 500 | sed -n '/jfugate/,/-----$/p' > /c/work/log.txt
+# svn diff `cygpath -u "E:\code\wws_shared\sdk\trunk\components\wws_crashreport\uploader\uploader.h"` | sed -e 's/^Index: .*//' | sed -e 's/^==============.*//'  | patch -R -o tmp
+
+# patch -p0 -i /e/work/save/colladaFix.diff
+# svn diff --diff-cmd=diff -x -u20
+
+function svnlog() {
+    rm /e/work/log.txt
+    for i in `svn log -r HEAD:0 --limit 20 | grep "^r[0-9]\+ " | sed -e 's/ .*//'`
+    do
+        svn log --diff -$i >> /e/work/log.txt
+    done
+}
 
 function gv
 {
-  export args=""
-  for i in "$@"
-  do
-    export args="$args `cygpath -m $i`"
-  done
-  gvim $args &
+  mvim $@
 }
-complete -o default -F _longopt gv
 
 function mtags
 {
@@ -233,63 +319,73 @@ function mtags
   ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
 }
 
-function icode
+export DEV=~/dev
+
+function bu
 {
-    export CSEARCHINDEX=c:/work/Code$1.searchIndex
-    cindex -reset `find c:/dev/$1/code -mindepth 1 -maxdepth 1 -type d | grep -v External | tr "\n\r" "  "`
+    export CDPATH=.:${DEV}/UBER_BOT
+    export P4CLIENT=jhudgins_uber_bot_${MACHINE}
+    alias tag="mtags c:/dev/UBER_BOT/code c:/dev/UBER_BOT/code"
 }
 
-export TEMP=c:/work/temp
-alias ls='ls --color'
-
-. .agent > /dev/null
-ps -p $SSH_AGENT_PID | grep ssh-agent > /dev/null || {
-    ssh-agent > .agent
-    . .agent > /dev/null
-}
-
-function isadmin()
+function bm
 {
-    net session > /dev/null 2>&1
-    if [ $? -eq 0 ]; then echo "admin"
-    else echo "user"; fi
+    export CDPATH=.:${DEV}/__MAIN__
+    export P4CLIENT=jhudgins_${MACHINE}
+    alias ic="icode __MAIN__"
+    alias tag="mtags c:/dev/__MAIN__ c:/dev/__MAIN__/code c:/dev/__MAIN__/Riot"
 }
 
-function gl()
+function bk
 {
-    git ls-files --others --exclude-standard $@
-    git diff --name-only $@
+    export CDPATH=.:${DEV}/KeystoneClient
+    export P4CLIENT=jhudgins_keystone_${MACHINE}
+    alias ic="icode KeystoneClient"
+    alias tag="mtags c:/dev/KeystoneClient c:/dev/KeystoneClient/Code c:/dev/KeystoneClient/Riot"
 }
 
-function gd()
+function bt
 {
-    rm -rf /c/work/diff
-    olddir=/c/work/diff/old
-    newdir=/c/work/diff/new
-    mkdir -p $olddir
-    mkdir -p $newdir
-    filelist=
-    for file in $(git diff --name-only $1..$2);
-    do
-        parentpath=$(dirname "$file")
-        mkdir -p "$olddir/$parentpath"
-        mkdir -p "$newdir/$parentpath"
-        git show $1:$file > "$newdir/$file"
-        git show $2:$file > "$olddir/$file"
-        filelist="$filelist $olddir/$file $newdir/$file"
-    done
-    gv $filelist &
+    export CDPATH=.:${DEV}/KeystoneTools
+    export P4CLIENT=jhudgins_keystone_tools_${MACHINE}
+    alias ic="icode KeystoneTools"
 }
 
-function gbd()
+function bf
 {
-    gd $1 $(git merge-base $1 origin/master)
+    export CDPATH=.:${DEV}/KeystoneFoundation
+    export P4CLIENT=jhudgins_keystone_foundation_${MACHINE}
+    alias ic="icode KeystoneFoundation"
+    alias tag="mtags c:/dev/KeystoneFoundation c:/dev/KeystoneFoundation/Code c:/dev/KeystoneFoundation/Riot"
 }
- 
- 
-alias gr='git checkout .; git clean -fd'
-alias gvd='gv $(git diff --name-only; git ls-files --others --exclude-standard)'
-alias greview='gv $(git diff --cached --name-only)'
 
-alias btag='cd /c/git/project; cat /c/work/tag.header > tmp; find . -type f -iname \*.cs | ctags --filter=yes --languages=C# >> tmp; python c:/dev/users/jhudgins/bin/tagsort.py tmp > tags; rm tmp'
+function bp
+{
+    export CDPATH=.:${DEV}/Patcher
+    export P4CLIENT=jhudgins_patcher_${MACHINE}
+    alias ic="icode Patcher"
+    alias tag="mtags c:/dev/Patcher c:/dev/Patcher/Code c:/dev/Patcher/Riot"
+}
 
+function br
+{
+    export CDPATH=.:${DEV}/RiotClient
+    export P4CLIENT=jhudgins_riot_client_${MACHINE}
+    alias ic="icode KeystoneRiotClient"
+    alias tag="mtags c:/dev/RiotClient c:/dev/RiotClient/Code c:/dev/RiotClient/Riot"
+}
+
+function bc
+{
+    export CDPATH=.:${DEV}/users
+    export P4CLIENT=jhudgins_config_${MACHINE}
+}
+
+alias excel='/c/Program\ Files\ \(x86\)/Microsoft\ Office/Office12/EXCEL.EXE'
+alias ls='ls -G'
+
+
+
+# for i in `cat /c/work/find.txt`; do   if [[ `p4 fstat $i 2> /dev/null | grep "headType.*+w"` ]];              then echo $i;   fi ; done > /c/work/p4writable.txt
+export PS1="\\[\\e]0;\\w\\a\\]\\n\\[\\e[33m\\]\\w\\[\\e[0m\\]\\n\\$ "
+bf

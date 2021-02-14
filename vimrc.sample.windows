@@ -1,4 +1,0 @@
-let git_dir = 'c:/git'
-let work_dir = 'c:/work'
-
-execute 'source ' . git_dir . '/config/vimrc.windows'

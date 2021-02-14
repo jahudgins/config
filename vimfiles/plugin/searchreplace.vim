@@ -12,7 +12,7 @@ set grepprg=grep
 " noremap #2 :call MyGrepLocal(0, 1, "", 2)<cr>
 noremap #3 :call MyCSearch()<cr>
 noremap #4 :call MyGrepLocal(0, 1, "*.*", "-I -i --exclude=tags --exclude-dir='node_modules' --exclude='*.map' --exclude-dir='.git'", 0)<cr>
-noremap #5 :call MyGrepLocal(0, 1, "*.cs", "-I -i", 1)<cr>
+noremap #5 :call MyGrepLocal(0, 1, "*.cpp", "-I -i", 1)<cr>
 
 " Globally substitutes the current word for something typed in
 function! SubstCurrentWord() 

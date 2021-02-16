@@ -1,18 +1,14 @@
 "
 " Author: Jonathan Hudgins <jhudgins@gmail.com>
 " Usage:
-"     :p4client <client>
+"     :Jp4client <client>
 "       set the p4 client different than the environment
-"     :p4port <server:port>
+"     :Jp4port <server:port>
 "       set the p4 port different than the environment
-"     :p4edit
+"     :Jp4edit
 "       check out current file from perforce
-"     :p4diff
-"       text diff of current file
-"     :p4vdiff
+"     :Jp4vdiff
 "       visual diff of current file
-"     :p4filelog
-"       filelog for current file
 "
 "*****************************************************************
 function! Jp4client(client)
@@ -29,6 +25,7 @@ function! Jp4edit()
     silent exec ":!p4 edit " . expand("%:p")
 endfunc
 
+"*****************************************************************
 function! Jp4vdiff()
     set co=500
     resize

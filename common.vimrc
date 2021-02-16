@@ -6,20 +6,15 @@ set directory=$workdir
 
 silent! unmap 
 
-"uncomment the following line to *not* load perforce (in case you are offline)
-let loaded_perforce=1
-
-set runtimepath=$configdir/vimfiles,C:/Vim/vimfiles,C:/Vim/$vimversion,C:/Vim/vimfiles/after
-runtime! plugin/*.vim
-runtime! $configdir/vimfiles/autoload/*.vim
-runtime! $configdir/vimfiles/plugin/*.vim
-runtime! $configdir/vimfiles/perforce/*.vim
+" set runtimepath=~/vimfiles,C:\vim/vimfiles,C:\vim\vim82,C:\vim\vim82\pack\dist\opt\matchit,C:\vim/vimfiles/after,~/vimfiles/after,$configdir/vimfiles
+" set runtimepath=$configdir/vimfiles,C:/Vim/vimfiles,C:/Vim/$vimversion,C:/Vim/vimfiles/after
+source $configdir/vimfiles/plugin/git.vim
+source $configdir/vimfiles/plugin/p4.vim
+source $configdir/vimfiles/plugin/searchreplace.vim
 
 function! BranchUberBot()
-  let g:p4Depot = 'depot'
   let client=expand('jhudgins_uber_bot_$MACHINE')
   call Jp4client(client)
-  call perforce#PFSwitch(1, 'perfvpn01.riotgames.com:1666', client, 'ext.jhudgins')
   cd $devdir/UBER_BOT/code
   set tags=$devdir/UBER_BOT/code/tags
 endfunction
@@ -44,6 +39,7 @@ set history=50		" keep 50 lines of command line history
 set ruler		" show the cursor position all the time
 set showcmd		" display incomplete commands
 set incsearch		" do incremental searching
+
 " Switch syntax highlighting on, when the terminal has colors
 " Also switch on highlighting the last used search pattern.
 if &t_Co > 2 || has("gui_running")
@@ -507,9 +503,9 @@ nmap ,xx :let @*=expand("%:p")<cr>
 
 nmap ,xd :call Jp4vdiff()<cr>
 "nmap ,xd :set co=300<cr>:PVDiff<cr>
-nmap ,xf :PFilelog<cr>
-nmap ,xi :PEdit<cr>
-nmap ,xr :PRevert<cr>
+"nmap ,xf :PFilelog<cr>
+"nmap ,xi :PEdit<cr>
+"nmap ,xr :PRevert<cr>
 
 nmap ,xp :bp<cr>
 nmap ,xn :bn<cr>
@@ -582,9 +578,6 @@ function! FilterLinesWithWord()
   exec ":g/" . w . "/d"
 endfunction
 
-let g:p4DefaultDiffOptions = '-du10'
-let p4UseVimDiff2 = 1
-
 nmap ,wq :w<cr>:q!<cr>:q<cr>:q<cr>
 nmap ,ww :w<cr>
 nmap ,wk k
@@ -594,9 +587,6 @@ nmap ,w= =
 nmap ,wd :set co=300<cr>=100+
 nmap ,wf :set co=300<cr>:set nowrap<cr>
 nmap ,ws :set co=120<cr>:set wrap<cr>
-
-runtime! plugin/*.vim
-runtime! $configdir/vimfiles/plugin/*.vim
 
 function! DS()
 	set scrollbind
@@ -654,142 +644,6 @@ nmap ,an :%!xxd<cr>:9,$s/: .... .... .... .... \(.... .... .... ....\)  / \1 fff
 nmap ,ar yypppdf{f,Dk0df,f,Dk0d2f,f,Dkd3f,f}DJJJj
 
 " map v 0yf<f<p0f<hcf<,f cw,,f<cw,,,,,,,,,,,,,,,,,,,,,,,* My Contacts ::: listreplace,* ,f>xxj
-
-"set tags=c:/ares/tags
-
-" function! FindGitRoot()
-function! GitBlame()
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    set co=300
-    new
-    silent exec "r !git blame " . relative
-    normal ggdd
-    set nomod
-endfunction
-
-function! GitDiff(revision)
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    set co=300
-    sp
-    winc _
-    diffthis
-    vert new
-    silent exec "r !git show " . a:revision . ":" . relative
-    normal ggdd
-    set nomod
-    diffthis
-    winc l
-endfunction
-
-function! GitDiffPrev()
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    let logline = split(system("git log -2 --pretty=oneline \"" . relative . "\""), "\n")[1]
-    let revision = substitute(logline, '\(\W*\) .*', '\1', '')
-    set co=300
-    sp
-    winc _
-    diffthis
-    vert new
-    silent exec "r !git show " . revision . ":" . relative
-    normal ggdd
-    set nomod
-    diffthis
-    winc l
-endfunction
-
-function! GitDiffVersion()
-    let default = histget("input", -1)
-    let revision = input("revision [" . default . "]: ") 
-    if revision == ""
-        let revision = default
-    endif
-    call histadd("input", revision)
-
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    set co=300
-    sp
-    winc _
-    diffthis
-    vert new
-    silent exec "r !git show " . revision . ":" . relative
-    normal ggdd
-    set nomod
-    diffthis
-    winc l
-endfunction
-
-function! GitLog(options)
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let g:relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    new
-    silent exec "r !git log " . a:options . " " . g:relative
-    normal gg
-    set nomod
-    set filetype=git
-    command! -range -buffer -nargs=0 CmdGitCommitDiff2
-            \ :call GitCommitDiff2(<line1>, <line2>)
-    nnoremap <buffer> <cr> :call GitCommitDiff()<cr>
-    vmap <silent> <buffer> <cr> :CmdGitCommitDiff2<cr>
-endfunction
-
-function! GitCommitDiff()
-    let l = getline(".")
-    let commit = substitute(l, '^[| *]*commit \(.*\)', '\1', '')
-    set co=300
-    new
-    winc _
-    exec 'edit' g:relative
-    diffthis
-    vert new
-    silent exec "r !git show " . commit . ":" . g:relative
-    normal ggdd
-    set nomod
-    silent exec "file " . commit . ":" . g:relative
-    diffthis
-    winc l
-endfunction
-
-function! GitCommitDiff2(line1, line2)
-    let commit1 = substitute(getline(a:line1), '^[| *]*commit \(.*\)', '\1', '')
-    let commit2 = substitute(getline(a:line2), '^[| *]*commit \(.*\)', '\1', '')
-    set co=300
-    new
-    winc _
-    silent exec "r !git show " . commit1 . ":" . g:relative
-    normal ggdd
-    set nomod
-    silent exec "file " . commit1 . ":" . g:relative
-    diffthis
-    vert new
-    silent exec "r !git show " . commit2 . ":" . g:relative
-    normal ggdd
-    set nomod
-    silent exec "file " . commit2 . ":" . g:relative
-    diffthis
-    winc l
-endfunction
-
-function! GitCheckout()
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    silent exec "!git checkout -- " . relative
-endfunction
-
 
 function! UniqueProcmonFiles()
     exec '%s/"[^"]*",//'

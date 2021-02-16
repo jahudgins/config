@@ -12,5 +12,5 @@ mkdir -p c:/work/temp
 mkdir -p c:/work/undodir
 git clone https://jhudgins@github.com/jahudgins/config c:/git/config
 cp c:/git/config/win.sample.bashrc ~/.bashrc
-cp c:/git/config/win.sample.vim_rc c:/vim/_vimrc
+cp c:/git/config/win.sample.vimrc c:/vim/_vimrc
 ```

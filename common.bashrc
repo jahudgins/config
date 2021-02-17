@@ -222,8 +222,7 @@ then
     export P4PORT=perforce.server.something:1666
 fi
 
-P4USER=ext.jhudgins
-P4CLIENT=jhudgins_win10${P4SUFFIX}
+P4USER=jhudgins
 P4CHARSET=utf8
 
 export P4MERGE=c:/vim/$VIMVERSION/gvim.exe
@@ -277,11 +276,11 @@ function mtags
   /c/work/bin/ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
 }
 
-function bu
+function bm
 {
-    export CDPATH=.:/c/dev/UBER_BOT
-    export P4CLIENT=jhudgins_uber_bot_${MACHINE}
-    alias tag="mtags c:/dev/UBER_BOT/code c:/dev/UBER_BOT/code"
+    export CDPATH=.:${DEVDIR}
+    # export P4CLIENT=jhudgins_uber_bot_${MACHINE}
+    # alias tag="mtags c:/dev/UBER_BOT/code c:/dev/UBER_BOT/code"
 }
 
 export TEMP=c:/work/temp
@@ -357,4 +356,4 @@ alias gr='git checkout .; git clean -fd'
 alias gvd='gv $(git diff --name-only;  git ls-files --others --exclude-standard)'
 alias greview='gv $(git diff --cached --name-only)'
 
-
+bm

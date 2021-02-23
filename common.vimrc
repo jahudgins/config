@@ -2,7 +2,7 @@ set backup              " keep a backup file
 set writebackup         " keep a backup file
 set backupdir=$workdir/backupdir
 set undodir=$workdir/backupdir
-set directory=$workdir
+set directory=$workdir/backupdir
 
 silent! unmap 
 
@@ -502,8 +502,8 @@ nmap ,xy :e c:/work/notes.md<cr>
 nmap ,xx :let @*=expand("%:p")<cr>
 
 nmap ,xd :call Jp4vdiff()<cr>
+nmap ,xf :call Jp4filelog()<cr>
 "nmap ,xd :set co=300<cr>:PVDiff<cr>
-"nmap ,xf :PFilelog<cr>
 "nmap ,xi :PEdit<cr>
 "nmap ,xr :PRevert<cr>
 

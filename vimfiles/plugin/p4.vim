@@ -41,3 +41,19 @@ function! Jp4vdiff()
     set scrollbind
 endfunc
 
+"*****************************************************************
+function! Jp4filelog()
+    let filename = expand("%:p")
+    new
+    set buftype=nowrite
+    silent exec ":%!p4 filelog " . filename
+endfunc
+
+"*****************************************************************
+function! Jp4describe(changeNum)
+    new
+    set buftype=nowrite
+    silent exec ":%!p4 describe -du " . a:changeNum
+endfunc
+
+command! -nargs=1 PDescribe :call Jp4describe(<args>)

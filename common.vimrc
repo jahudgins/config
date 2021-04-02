@@ -12,14 +12,14 @@ source $configdir/vimfiles/plugin/git.vim
 source $configdir/vimfiles/plugin/p4.vim
 source $configdir/vimfiles/plugin/searchreplace.vim
 
-function! BranchUberBot()
-  let client=expand('jhudgins_uber_bot_$MACHINE')
-  call Jp4client(client)
-  cd $devdir/UBER_BOT/code
-  set tags=$devdir/UBER_BOT/code/tags
+function! Branch0()
+  call Jp4client($p4client0)
+  let $devdir=$devdir0
+  cd $devdir
+  set tags=$devdir0/tags
 endfunction
 
-map ,bu :call BranchUberBot()<cr>
+map ,b0 :call Branch0()<cr>
 
 
 set nojoinspaces
@@ -93,7 +93,7 @@ set textwidth=0
 setlocal textwidth=0
 set tabstop=4
 set shiftwidth=4
-set expandtab
+set noexpandtab
 set nocin
 set noruler
 set wrapscan
@@ -104,7 +104,6 @@ let python_highlight_space_errors = 1
 
 let temp = $workdir.'\temp'
 let $temp = $workdir.'\temp'
-let $VIM="c:/Vim"
 
 function! GlobalGotoTag(switchWin)
   let l = getline(".")
@@ -118,51 +117,6 @@ function! GlobalGotoTag(switchWin)
     winc p
   endif
 endfunction
-
-function! GlobalOpen( scratch )
-  exec ":e " . a:scratch
-  nnoremap <buffer> <cr> :call GlobalGotoTag(1)<cr>
-  nnoremap <buffer> o :call GlobalGotoTag(0)<cr>
-endfunction
-
-function! GlobalRefTags( scratch )
-  let cw = expand("<cword>")
-  silent exec ":! global -tr " .cw. " > " . a:scratch
-  sp
-  call GlobalOpen( a:scratch )
-endfunction
-
-function! GlobalAllTags( scratch )
-  let cw = expand("<cword>")
-  silent exec ":! global -ts " .cw. " > " . a:scratch
-  sp
-  call GlobalOpen( a:scratch )
-endfunction
-
-map ,tt :call GlobalAllTags( "c:/work/glob0.txt" )<cr>
-map ,tr :call GlobalRefTags( "c:/work/glob0.txt" )<cr>
-map ,T0 :call GlobalRefTags( "c:/work/glob0.txt" )<cr>
-map ,T1 :call GlobalRefTags( "c:/work/glob1.txt" )<cr>
-map ,T2 :call GlobalRefTags( "c:/work/glob2.txt" )<cr>
-map ,T3 :call GlobalRefTags( "c:/work/glob3.txt" )<cr>
-map ,T4 :call GlobalRefTags( "c:/work/glob4.txt" )<cr>
-map ,T5 :call GlobalRefTags( "c:/work/glob5.txt" )<cr>
-map ,T6 :call GlobalRefTags( "c:/work/glob6.txt" )<cr>
-map ,T7 :call GlobalRefTags( "c:/work/glob7.txt" )<cr>
-map ,T8 :call GlobalRefTags( "c:/work/glob8.txt" )<cr>
-map ,T9 :call GlobalRefTags( "c:/work/glob9.txt" )<cr>
-
-map ,i0 :call GlobalOpen( "c:/work/glob0.txt" )<cr>
-map ,i1 :call GlobalOpen( "c:/work/glob1.txt" )<cr>
-map ,i2 :call GlobalOpen( "c:/work/glob2.txt" )<cr>
-map ,i3 :call GlobalOpen( "c:/work/glob3.txt" )<cr>
-map ,i4 :call GlobalOpen( "c:/work/glob4.txt" )<cr>
-map ,i5 :call GlobalOpen( "c:/work/glob5.txt" )<cr>
-map ,i6 :call GlobalOpen( "c:/work/glob6.txt" )<cr>
-map ,i7 :call GlobalOpen( "c:/work/glob7.txt" )<cr>
-map ,i8 :call GlobalOpen( "c:/work/glob8.txt" )<cr>
-map ,i9 :call GlobalOpen( "c:/work/glob9.txt" )<cr>
-
 
 let relative=0
 com! -nargs=* T tselect
@@ -436,6 +390,26 @@ function! GotoCSharpMake()
   exec "e +" . linenumber. " " . file
 endfunction
 
+function! GetUnrealFile(line)
+  let mx = '^\([^:]*:   \)\([^(]*\)(\([0-9]*\)).*'
+  let filename = substitute(a:line, mx, '\2', '')
+  return filename
+endfunction
+
+function! GetUnrealNumber(line)
+  let mx = '^\([^:]*:   \)\([^(]*\)(\([0-9]*\)).*'
+  let number = substitute(a:line, mx, '\3', '')
+  return number
+endfunction
+
+function! GotoUnreal()
+  let l = getline(".")
+  let file = GetUnrealFile(l)
+  let linenumber = GetUnrealNumber(l)
+  winc p
+  exec "e +" . linenumber. " " . file
+endfunction
+
 nmap zb 85hzs
 nmap zf 85l10hzs10l
 nmap ,e :Sexplore<CR>
@@ -449,8 +423,9 @@ nmap ,P "*P
 nmap ,y "*y
 
 " Source the .vimrc
-nmap ,s :source $VIM/_vimrc<cr>
-nmap ,S :source %<cr>
+nmap ,ss :source $VIMLOCATION/../_vimrc<cr>
+nmap ,sx :e $VIMLOCATION/../_vimrc<cr>
+nmap ,se :e $configdir/common.vimrc<cr>
 
 map ,c :Calendar<cr>
 " C++ comments
@@ -464,8 +439,6 @@ map ,k k
 map ,j j
 map ,u 
 map ,h h
-"map ,bn :bn<cr>
-"map ,bp :bp<cr>
 
 "VMAPs
 " Sort the visually selected range by pressing "s"
@@ -489,30 +462,33 @@ nmap ,r9 :e $temp/search9<CR>:call MapGotoBuff()<cr>
 nmap ,rf :call Filter()<CR>
 nmap ,rs :call Syntax()<CR>
 
-nmap ,xa :execute 'e  c:\somewhere\tags'<cr>
+nmap ,xa :e c:/phx/Dev-Main/tags<cr>
 nmap ,xb :echo unused
 nmap ,xc :e c:/work/scratch.cpp<CR>
 nmap ,xe :e!<cr>
 nmap ,xg :call FilterLinesWithWord()<cr>
 nmap ,xh :echo unused
-nmap ,xl :e c:/somelogfile.log<cr>
+nmap ,xj :e $logfile0<cr>
+nmap ,xk :e $logfile1<cr>
+nmap ,xl :e $logfile2<cr>
+"C:\Users\jhudgins\AppData\Local\UnrealGameSync\phx_jhudgins_dev-main_sds-jhudgins2@phx_jhudgins_dev-main_sds-jhudgins2.review.log"
 nmap ,xt :e c:/work/todo.md<cr>
 nmap ,xy :e c:/work/notes.md<cr>
 
 nmap ,xx :let @*=expand("%:p")<cr>
 
-nmap ,xd :call Jp4vdiff()<cr>
-nmap ,xf :call Jp4filelog()<cr>
-"nmap ,xd :set co=300<cr>:PVDiff<cr>
-"nmap ,xi :PEdit<cr>
-"nmap ,xr :PRevert<cr>
+nmap ,ta :call Jp4annotate()<cr>
+nmap ,td :call Jp4vdiff()<cr>
+nmap ,tf :call Jp4filelog()<cr>
+nmap ,ti :silent !p4 edit "%:p"<cr>
+nmap ,to :call Jp4opened()<cr>
+nmap ,tr :silent !p4 revert "%:p"<cr>
 
 nmap ,xp :bp<cr>
 nmap ,xn :bn<cr>
 nmap ,xo :execute 'edit' substitute(substitute(@*, "^.", "", ""), "...$", "", "")<cr>
 
 nmap ,xq :call UndiffBuffer()<cr>:q<cr>:call UndiffBuffer()<cr>:q<cr>:set co=120<cr>
-nmap ,xs :e $configdir/common.vimrc<cr>
 
 nmap ,x0 :e c:/work/scratch0.txt<CR>
 nmap ,x1 :e c:/work/scratch1.txt<CR>
@@ -525,7 +501,7 @@ nmap ,x7 :e c:/work/scratch7.txt<CR>
 nmap ,x8 :e c:/work/scratch8.txt<CR>
 nmap ,x9 :e c:/work/scratch9.txt<CR>
 nmap ,x- :e c:/work/quotes.txt<CR>
-nmap ,xj :%y<cr>:new<cr>p:%!python -mjson.tool<cr> 
+nmap ,xJ :%y<cr>:new<cr>p:%!python -mjson.tool<cr> 
 
 function! MakeOut( filename )
 	exec ":e " . a:filename
@@ -557,7 +533,16 @@ function! MakeCSharp()
   nnoremap <buffer> <cr> :call GotoCSharpMake()<cr>
 endfunction
 
+function! MakeUnreal()
+  normal! G
+  exec "/: error "
+  nnoremap <buffer> <cr> :call GotoUnreal()<cr>
+endfunction
+
+
+
 "nmap ,xxr :call MakeOut("Project/NET/Xbox\ Release/BuildLog.htm")<CR>
+nmap ,mu :call MakeUnreal()<CR>
 nmap ,mc :call MakeCSharp()<CR>
 nmap ,mo :call MakeOut( "c:/work/build.log" )<cr>
 nmap ,mr :call MakeOut( "c:/perforce/branch/obj/release/BuildLog.htm" )<cr>
@@ -664,3 +649,5 @@ nmap ,glb :call GitLog("--first-parent")<cr>
 nmap ,glg :call GitLog("--graph")<cr>
 nmap ,gln :call GitLog("")<cr>
 nmap ,gc :call GitCheckout()<cr>
+
+call Branch0()

@@ -209,7 +209,7 @@ shopt -s histappend                      # Make bash append rather than overwrit
 export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND" # Save reload hist after each cmd
 
 export PYTHONUNBUFFERED=1
-export PATH=.:/c/work/bin:$PATH:/c/Vim/$VIMVERSION
+export PATH=.:/c/work/bin:$PATH:$VIMLOCATION
 
 
 
@@ -225,12 +225,15 @@ fi
 P4USER=jhudgins
 P4CHARSET=utf8
 
-export P4MERGE=c:/vim/$VIMVERSION/gvim.exe
-export P4MERGEUNICODE=c:/vim/$VIMVERSION/gvim.exe
-export P4EDITOR=c:/vim/$VIMVERSION/gvim.exe
+export P4MERGE=$VIMLOCATION/gvim.exe
+export P4MERGEUNICODE=$VIMLOCATION/gvim.exe
+export P4EDITOR=$VIMLOCATION/gvim.exe
 
 alias p4sync='unset PWD; p4 -vnet.tcpsize=524288 sync --parallel "threads=4,min=1,minsize=1"'
-alias p4list="python c:/git/ext-jhudgins/utils/scripts/p4list.py"
+# alias p4list="python c:/git/ext-jhudgins/utils/scripts/p4list.py"
+function p4list() {
+  p4 have $(p4 opened $@ | sed -e 's/#.*//') | sed -e 's/.*- \(.*\)/\1/' | tr '\\' '/'
+}
 function p4l() {
   p4 opened | grep $1 | sed -e 's/#.*//'
 }
@@ -257,12 +260,13 @@ function p4whichsync() {
   p4syncopened -n 2>&1 | grep -v "up-to-date"
 }
 
-function gv
+function gv()
 {
-  export args=""
+  args=""
   for i in "$@"
   do
-    export args="$args `cygpath -m $i`"
+    # echo $i
+    args="$args `cygpath -m $i`"
   done
   gvim $args &
 }
@@ -272,15 +276,20 @@ function mtags
 {
   export tag_location="$1"
   shift
-  echo /c/work/bin/ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
-  /c/work/bin/ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  echo ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
 }
 
-function bm
+function b0
 {
-    export CDPATH=.:${DEVDIR}
-    # export P4CLIENT=jhudgins_uber_bot_${MACHINE}
-    # alias tag="mtags c:/dev/UBER_BOT/code c:/dev/UBER_BOT/code"
+    export CDPATH=.:${DEVDIR0}
+    export P4CLIENT=$P4CLIENT0
+    export EXPANDED_TAG_DIRS=""
+    for tagdir in ${TAG_DIRS[@]};
+    do
+        EXPANDED_TAG_DIRS+="${DEVDIR0}/${tagdir} "
+    done
+    alias tag="mtags ${DEVDIR0} ${EXPANDED_TAG_DIRS}"
 }
 
 export TEMP=c:/work/temp
@@ -356,4 +365,4 @@ alias gr='git checkout .; git clean -fd'
 alias gvd='gv $(git diff --name-only;  git ls-files --others --exclude-standard)'
 alias greview='gv $(git diff --cached --name-only)'
 
-bm
+b0

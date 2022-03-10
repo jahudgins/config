@@ -12,15 +12,19 @@ source $configdir/vimfiles/plugin/git.vim
 source $configdir/vimfiles/plugin/p4.vim
 source $configdir/vimfiles/plugin/searchreplace.vim
 
-function! Branch0()
-  call Jp4client($p4client0)
-  let $devdir=$devdir0
+function! Branch(client, devdir)
+  call Jp4client(a:client)
+  let $devdir=a:devdir
+  let $logfile0='$devdir/$logsuffix0'
+  let $logfile1='$devdir/$logsuffix1'
+  let $logfile2='$devdir/$logsuffix2'
   cd $devdir
-  set tags=$devdir0/tags
+  set tags=$devdir/tags
 endfunction
 
-map ,b0 :call Branch0()<cr>
-
+map ,b0 :call Branch($p4client0, $devdir0)<cr>
+map ,b1 :call Branch($p4client1, $devdir1)<cr>
+map ,b2 :call Branch($p4client2, $devdir2)<cr>
 
 set nojoinspaces
 set nocompatible
@@ -85,7 +89,7 @@ au BufRead,BufNewFile SConstruct setfiletype python
 behave xterm
 set selectmode=mouse
 set guioptions=agimrt
-set guifont=lucida_console:h9
+set guifont=lucida_console:h10
 "set guifont=courier:h7
 set lines=110
 set co=120
@@ -478,7 +482,7 @@ nmap ,xy :e c:/work/notes.md<cr>
 nmap ,xx :let @*=expand("%:p")<cr>
 
 nmap ,ta :call Jp4annotate()<cr>
-nmap ,td :call Jp4vdiff()<cr>
+nmap ,td :call Jp4vdiff('')<cr>
 nmap ,tf :call Jp4filelog()<cr>
 nmap ,ti :silent !p4 edit "%:p"<cr>
 nmap ,to :call Jp4opened()<cr>
@@ -500,7 +504,7 @@ nmap ,x6 :e c:/work/scratch6.txt<CR>
 nmap ,x7 :e c:/work/scratch7.txt<CR>
 nmap ,x8 :e c:/work/scratch8.txt<CR>
 nmap ,x9 :e c:/work/scratch9.txt<CR>
-nmap ,x- :e c:/work/quotes.txt<CR>
+nmap ,x- :e c:/work/scratch0.py<CR>
 nmap ,xJ :%y<cr>:new<cr>p:%!python -mjson.tool<cr> 
 
 function! MakeOut( filename )
@@ -538,8 +542,6 @@ function! MakeUnreal()
   exec "/: error "
   nnoremap <buffer> <cr> :call GotoUnreal()<cr>
 endfunction
-
-
 
 "nmap ,xxr :call MakeOut("Project/NET/Xbox\ Release/BuildLog.htm")<CR>
 nmap ,mu :call MakeUnreal()<CR>
@@ -650,4 +652,4 @@ nmap ,glg :call GitLog("--graph")<cr>
 nmap ,gln :call GitLog("")<cr>
 nmap ,gc :call GitCheckout()<cr>
 
-call Branch0()
+silent normal ,b0

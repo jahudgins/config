@@ -209,7 +209,10 @@ shopt -s histappend                      # Make bash append rather than overwrit
 export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND" # Save reload hist after each cmd
 
 export PYTHONUNBUFFERED=1
-export PATH=.:/c/work/bin:$PATH:$VIMLOCATION
+
+config_dir=$(dirname $BASH_SOURCE)
+config_dir=$(cygpath -u $config_dir)
+export PATH=.:/c/work/bin:$config_dir:$PATH:$VIMLOCATION
 
 
 
@@ -234,6 +237,12 @@ alias p4sync='unset PWD; p4 -vnet.tcpsize=524288 sync --parallel "threads=4,min=
 function p4list() {
   p4 have $(p4 opened $@ | sed -e 's/#.*//') | sed -e 's/.*- \(.*\)/\1/' | tr '\\' '/'
 }
+function p4lc() {
+  p4 have $(p4 describe -S -s $@ | grep '^\.\.\.' | sed -e 's/^....//' | sed -e 's/#.*//') \
+		| sed -e 's/.*- \(.*\)/\1/' | tr '\\' '/'
+  # p4 have $(p4 describe -S -s $@ | grep '^...' | sed -e 's/^....//' | sed -d 's/#.*//')
+}
+
 function p4l() {
   p4 opened | grep $1 | sed -e 's/#.*//'
 }
@@ -276,8 +285,8 @@ function mtags
 {
   export tag_location="$1"
   shift
-  echo ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
-  ctags --langmap=c++:+.inl --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  echo ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
 }
 
 function b0
@@ -291,6 +300,33 @@ function b0
     done
     alias tag="mtags ${DEVDIR0} ${EXPANDED_TAG_DIRS}"
 }
+
+function b1
+{
+    export CDPATH=.:${DEVDIR1}
+    export P4CLIENT=$P4CLIENT1
+    export EXPANDED_TAG_DIRS=""
+    for tagdir in ${TAG_DIRS[@]};
+    do
+        EXPANDED_TAG_DIRS+="${DEVDIR1}/${tagdir} "
+    done
+    alias tag="mtags ${DEVDIR1} ${EXPANDED_TAG_DIRS}"
+}
+
+function b2
+{
+    export CDPATH=.:${DEVDIR1}
+    export P4CLIENT=$P4CLIENT2
+    export EXPANDED_TAG_DIRS=""
+    for tagdir in ${TAG_DIRS[@]};
+    do
+        EXPANDED_TAG_DIRS+="${DEVDIR2}/${tagdir} "
+    done
+    alias tag="mtags ${DEVDIR2} ${EXPANDED_TAG_DIRS}"
+}
+
+
+
 
 export TEMP=c:/work/temp
 alias ls='ls --color'

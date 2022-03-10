@@ -19,14 +19,34 @@ function! Jp4edit()
 endfunc
 
 "*****************************************************************
-function! Jp4vdiff()
+function! Jp4vdiff_file(filename, fileversion)
     set co=500
     resize
     split
     winc _
     diffthis
     set scrollbind
+    vnew
+    set buftype=nowrite
+    silent exec ":%!p4 print -q " . a:filename . a:fileversion
+    diffthis
+    set scrollbind
+endfunc
+
+function! Jp4vdiff()
     let filename = expand("%:p")
+	call Jp4vdiff_file(filename, '')
+endfunc
+
+"*****************************************************************
+function! Jp4vdepotdiff(depot)
+    set co=500
+    resize
+    split
+    winc _
+    diffthis
+    set scrollbind
+    let filename = a:depot + substitute(expand("%:p"), '\([\\]*\)\', '')
     vnew
     set buftype=nowrite
     silent exec ":%!p4 print -q " . filename
@@ -35,19 +55,33 @@ function! Jp4vdiff()
 endfunc
 
 "*****************************************************************
-function! Jp4filelog()
-    let filename = expand("%:p")
-    new
-    set buftype=nowrite
-    silent exec ":%!p4 filelog " . filename
-endfunc
-
-"*****************************************************************
 function! Jp4describe(changeNum)
     new
     set buftype=nowrite
     silent exec ":%!p4 describe -du " . a:changeNum
     set syntax=diff
+endfunc
+
+"*****************************************************************
+function! Jp4filelog_diff()
+    let line = getline(".")
+    let mx = '^\.\.\. #\([0-9]*\) .*'
+    let file_version = substitute(line, mx, '\1', '')
+	let filename = b:filename
+	new
+    exec ':e ' . filename
+	call Jp4vdiff_file(filename, '\#' . file_version)
+endfunc
+
+"*****************************************************************
+function! Jp4filelog()
+    let filename = expand("%:p")
+    new
+    let b:filename = filename
+    set buftype=nowrite
+    silent exec ":%!p4 filelog " . filename
+	set syntax=logtalk
+    nnoremap <buffer> <cr> :call Jp4filelog_diff()<cr>
 endfunc
 
 "*****************************************************************

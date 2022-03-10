@@ -1,9 +1,16 @@
-function! GitBlame()
+function! GitRelative()
+    let cygdir = system("cygpath -m '" . expand("%:h") . "'")
     let cygfile = system("cygpath -m '" . expand("%:p") . "'")
+    cd `=cygdir`
     let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
     let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
     cd `=topdir`
-    set co=300
+	return relative
+endfunction
+
+function! GitBlame()
+    let relative = GitRelative()
+    set co=500
     new
     silent exec "r !git blame " . relative
     normal ggdd
@@ -11,11 +18,8 @@ function! GitBlame()
 endfunction
 
 function! GitDiff(revision)
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    set co=300
+    let relative = GitRelative()
+    set co=500
     sp
     winc _
     diffthis
@@ -28,12 +32,10 @@ function! GitDiff(revision)
 endfunction
 
 function! GitDiffPrev()
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
+    let relative = GitRelative()
     let logline = split(system("git log -2 --pretty=oneline \"" . relative . "\""), "\n")[1]
     let revision = substitute(logline, '\(\W*\) .*', '\1', '')
-    set co=300
+    set co=500
     sp
     winc _
     diffthis
@@ -53,11 +55,8 @@ function! GitDiffVersion()
     endif
     call histadd("input", revision)
 
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
-    set co=300
+    let relative = GitRelative()
+    set co=500
     sp
     winc _
     diffthis
@@ -70,10 +69,7 @@ function! GitDiffVersion()
 endfunction
 
 function! GitLog(options)
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let g:relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
+    let g:relative = GitRelative()
     new
     silent exec "r !git log " . a:options . " " . g:relative
     normal gg
@@ -88,7 +84,7 @@ endfunction
 function! GitCommitDiff()
     let l = getline(".")
     let commit = substitute(l, '^[| *]*commit \(.*\)', '\1', '')
-    set co=300
+    set co=500
     new
     winc _
     exec 'edit' g:relative
@@ -105,7 +101,7 @@ endfunction
 function! GitCommitDiff2(line1, line2)
     let commit1 = substitute(getline(a:line1), '^[| *]*commit \(.*\)', '\1', '')
     let commit2 = substitute(getline(a:line2), '^[| *]*commit \(.*\)', '\1', '')
-    set co=300
+    set co=500
     new
     winc _
     silent exec "r !git show " . commit1 . ":" . g:relative
@@ -123,10 +119,7 @@ function! GitCommitDiff2(line1, line2)
 endfunction
 
 function! GitCheckout()
-    let cygfile = system("cygpath -m '" . expand("%:p") . "'")
-    let topdir = substitute(system("git rev-parse --show-toplevel"), '\W*$', '', '')
-    let relative = substitute(cygfile, topdir . '/\(.*\)', '\1', '')
-    cd `=topdir`
+    let relative = GitRelative()
     silent exec "!git checkout -- " . relative
 endfunction
 

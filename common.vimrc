@@ -482,7 +482,7 @@ nmap ,xy :e c:/work/notes.md<cr>
 nmap ,xx :let @*=expand("%:p")<cr>
 
 nmap ,ta :call Jp4annotate()<cr>
-nmap ,td :call Jp4vdiff('')<cr>
+nmap ,td :call Jp4vdiff()<cr>
 nmap ,tf :call Jp4filelog()<cr>
 nmap ,ti :silent !p4 edit "%:p"<cr>
 nmap ,to :call Jp4opened()<cr>

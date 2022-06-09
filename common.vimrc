@@ -18,7 +18,7 @@ function! Branch(client, devdir)
   let $logfile0='$devdir/$logsuffix0'
   let $logfile1='$devdir/$logsuffix1'
   let $logfile2='$devdir/$logsuffix2'
-  cd $devdir
+  cd "$devdir"
   set tags=$devdir/tags
 endfunction
 
@@ -91,7 +91,7 @@ set selectmode=mouse
 set guioptions=agimrt
 set guifont=lucida_console:h10
 "set guifont=courier:h7
-set lines=110
+"set lines=110
 set co=120
 set textwidth=0
 setlocal textwidth=0
@@ -106,8 +106,8 @@ let mapleader=","
 
 let python_highlight_space_errors = 1
 
-let temp = $workdir.'\temp'
-let $temp = $workdir.'\temp'
+let temp = $workdir.'/temp'
+let $temp = $workdir.'/temp'
 
 function! GlobalGotoTag(switchWin)
   let l = getline(".")
@@ -174,19 +174,19 @@ function! DC()
 
 	sp
 
-	normal y/^==== THEIRS
+	normal y/^==== THEIRS
 	exec ":e ". orig
 	normal Gopkdgg
 	exec ":w"
 	exec ":e#"
 
-	normal /^==== THEIRSy/^==== YOURS
+	normal /^==== THEIRSy/^==== YOURS
 	exec ":e ". theirs
 	normal Gopkdgg
 	exec ":w"
 	exec ":e#"
 
-	normal /^==== YOURSy/^<<<<
+	normal /^==== YOURSy/^<<<<
 	exec ":e ". yours
 	normal Gopkdgg
 	exec ":w"
@@ -210,7 +210,7 @@ function! DM()
   set co=500
   winc =
 	winc j
-	normal GG/>>>>
+	normal GG/>>>>
 endfunction
 
 nmap ,da :call DA()<cr>
@@ -510,7 +510,7 @@ nmap ,xJ :%y<cr>:new<cr>p:%!python -mjson.tool<cr>
 function! MakeOut( filename )
 	exec ":e " . a:filename
 	call MakeBuffer()
-   normal z
+   normal z
 endfunction
 
 function! MakeBuffer()
@@ -652,4 +652,4 @@ nmap ,glg :call GitLog("--graph")<cr>
 nmap ,gln :call GitLog("")<cr>
 nmap ,gc :call GitCheckout()<cr>
 
-silent normal ,b0
+" silent normal ,b0

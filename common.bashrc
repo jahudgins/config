@@ -285,8 +285,8 @@ function mtags
 {
   export tag_location="$1"
   shift
-  echo ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
-  ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=External --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  echo ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
+  ctags --langmap=c++:+.inl,c++:+.usf,c++:+.ush --exclude=node_modules --exclude=*.html --exclude=*.htm -R -f $tag_location/tags $@
 }
 
 function b0

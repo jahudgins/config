@@ -1,0 +1,47 @@
+C:\git\o3de-atomtest\user\log\Editor.log
+
+Setup
+-----
+Visiual Studio
+	* Tools : External Tools : Add
+			C:\Vim\vim82\gvim.exe
+			--servername VS +$(CurLine) $(ItemPath)
+			$(ItemDir)
+	* Customize : Search=Keyboard : Show Commands Containing=tools.ext 4
+ctags
+
+regedit debug at startup
+Run regedit.exe
+	Go to HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
+	Create a new key named as your exe (example: yourprogram.exe)
+	Create a new string value under your exe. The name of the string value is Debugger, and the value is vsjitdebugger.exe
+
+
+git/<project>/project.json:engine
+~/.o3de/o3de_manifest.json:engines_path
+
+castle_brick_02_red_ao_1k ? castle_brick_02_red_ambientocclusion
+castle_brick_02_red_diff_1k ? castle_brick_02_red_basecolor
+castle_brick_02_red_disp_1k ? castle_brick_02_red_displ
+castle_brick_02_red_nor_1k ? castle_brick_02_red_normal
+castle_brick_02_red_rough_1k ? castle_brick_02_red_roughness
+
+material editor takes long time
+	to start
+	to pick first texture
+	to return from picked texture
+	default tiling on shader ball shows underside having no texture with base, roughneess, normal textures set
+python help button goes to 
+
+
+Products:
+indigo renderer
+blender
+o3de
+unreal
+unity
+pix
+renderdoc
+substance designer
+gltf
+

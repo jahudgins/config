@@ -477,7 +477,7 @@ nmap ,xk :e $logfile1<cr>
 nmap ,xl :e $logfile2<cr>
 "C:\Users\jhudgins\AppData\Local\UnrealGameSync\phx_jhudgins_dev-main_sds-jhudgins2@phx_jhudgins_dev-main_sds-jhudgins2.review.log"
 nmap ,xt :e c:/work/todo.md<cr>
-nmap ,xy :e c:/work/notes.md<cr>
+nmap ,xy :e $configdir/notes.txt<cr>
 
 nmap ,xx :let @*=expand("%:p")<cr>
 
